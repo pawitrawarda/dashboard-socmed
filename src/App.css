@@ -1,7 +1,14 @@
 .posts-box {
     margin-top: 20px;
     padding-bottom: 20px;
+}
+
+.tab-navigation {
+    margin-bottom: 5px;
+    padding-top: 5px;
+    padding-bottom: 5px;
     border-bottom: solid 1px #dedede;
+    border-top: solid 1px #dedede;
 }
 
 .contents {
