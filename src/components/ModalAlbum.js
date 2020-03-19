@@ -9,7 +9,9 @@ class ModalAlbum extends Component {
         this.state = {
             albumByUser: [],
             photoByAlbum: [],
-            showPhoto: false
+            dataPhoto: {},
+            showPhoto: false,
+            showDetailPhoto: false
         }
     }
 
@@ -23,9 +25,33 @@ class ModalAlbum extends Component {
         })
     }
 
+    toggleDetailPhoto (data) {
+        this.setState({
+            showDetailPhoto: !this.state.showDetailPhoto
+        })
+
+        if(!this.state.showDetailPhoto) {
+            this.setState({
+                showPhoto: false
+            })
+
+            this.setState({
+                dataPhoto: data
+            })
+        } else {
+            this.setState({
+                showPhoto: true
+            })
+        }
+    }
+
     onCloseModal () {
         this.setState({
             showPhoto: false
+        })
+
+        this.setState({
+            showDetailPhoto: false
         })
     }
 
@@ -60,14 +86,22 @@ class ModalAlbum extends Component {
                 {
                     this.state.photoByAlbum.map((item) => {
                         return (
-                            <Col md={2} className="mb-5">
-                                <a href="javascript:void(0)" onClick={() => false}>
+                            <Col md={2} className="mb-5" key={item.id}>
+                                <a href={'/'} onClick={(e) => { e.preventDefault(); this.toggleDetailPhoto(item)}}>
                                     <Image src={item.thumbnailUrl} thumbnail />
                                 </a>
                             </Col>
                         )
                     })
                 }
+            </Row>
+        } else if(this.state.showDetailPhoto) {
+            content = <Row>
+                <Col md={12} className="text-center">
+                    <h3>Detail Photo</h3>
+                    <h4>{this.state.dataPhoto.title}</h4>
+                    <Image src={this.state.dataPhoto.url} thumbnail />
+                </Col>
             </Row>
         } else {
             content = <ListGroup>
@@ -90,6 +124,7 @@ class ModalAlbum extends Component {
                 }
             </ListGroup>
         }
+
         return(
             <Modal size="lg"
                 show={this.props.showModal}
@@ -108,9 +143,13 @@ class ModalAlbum extends Component {
                         <Button variant="secondary" onClick={() => this.toggleContent()}>
                             Back
                         </Button> :
-                        <Button variant="secondary" onClick={this.props.parentAction}>
-                            Close
-                        </Button>
+                        this.state.showDetailPhoto ?
+                            <Button variant="secondary" onClick={() => this.toggleDetailPhoto()}>
+                                Back
+                            </Button> :
+                                <Button variant="secondary" onClick={this.props.parentAction}>
+                                    Close
+                                </Button>
                     }
                 </Modal.Footer>
             </Modal>
