@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import axios from 'axios'
 import { Container, Row, Col, Tab, Nav, Button, Card, Modal, ListGroup } from 'react-bootstrap'
+import ModalAlbum from './components/ModalAlbum'
 import './App.css'
 
 class App extends Component {
@@ -9,11 +10,10 @@ class App extends Component {
         super(props)
         this.close = this.close.bind(this)
         this.closeModalDetailPost = this.closeModalDetailPost.bind(this)
-        this.closeModalAlbum = this.closeModalAlbum.bind(this)
+        this.toggleModalAlbums = this.toggleModalAlbums.bind(this)
         this.state = {
             users: [],
             postsByUser: [],
-            albumByUser: [],
             myPosts: [
                 {
                     id: '1',
@@ -30,12 +30,22 @@ class App extends Component {
             userId: '',
             showModal: 0,
             showModalDetailPost: 0,
-            showModalAlbum: 0
+            showModalAlbum: false
         };
     }
 
     componentDidMount() {
         this.getListUsers()
+    }
+
+    toggleModalAlbums (id) {
+        this.setState({
+            showModalAlbum: !this.state.showModalAlbum
+        })
+
+        this.setState({
+            userId: id
+        })
     }
 
     open(id) {
@@ -59,18 +69,6 @@ class App extends Component {
     closeModalDetailPost() {
         this.setState({
             showModalDetailPost: 0
-        })
-    }
-
-    openModalAlbum(id) {
-        this.setState({
-            showModalAlbum: id
-        })
-    }
-
-    closeModalAlbum() {
-        this.setState({
-            showModalAlbum: 0
         })
     }
 
@@ -111,18 +109,6 @@ class App extends Component {
             })
     }
 
-    getAlbumByUser (id) {
-        axios.get('https://jsonplaceholder.typicode.com/albums?userId=' + id)
-            .then(res => {
-                this.setState({
-                    albumByUser: res.data
-                })
-            })
-            .catch(function (error) {
-                console.log(error)
-            })
-    }
-
     UsersListComponent () {
         let listItems = this.state.users.map( (item, index) => {
             return (
@@ -134,20 +120,20 @@ class App extends Component {
                                 { item.email }
                             </Card.Text>
                             <Button variant="info" size="sm" className="mr-2" onClick={() => this.open(item.id)}>List Posts</Button>
-                            <Button variant="info" size="sm" onClick={() => this.openModalAlbum(item.id)}>Albums</Button>
+                            <Button variant="info" size="sm" onClick={() => this.toggleModalAlbums(item.id)}>Albums</Button>
                         </Card.Body>
                     </Card>
-                    <Modal size="lg" show={this.state.showModal === item.id && this.state.showModalAlbum === 0} onHide={this.close} onShow={ () => this.getPostsByUser(item.id)}>
+                    <Modal size="lg" show={this.state.showModal === item.id} onHide={this.close} onShow={ () => this.getPostsByUser(item.id)}>
                         <Modal.Header closeButton>
                             <Modal.Title>List Posts</Modal.Title>
                         </Modal.Header>
                         <Modal.Body>
                             <ListGroup variant="flush">
-                                {this.ListPostByUserComponent()}
+                                { this.ListPostByUserComponent() }
                             </ListGroup>
                         </Modal.Body>
                         <Modal.Footer>
-                            <Button variant="secondary" onClick={this.close}>
+                            <Button variant="secondary" onClick={this.close} onHide={this.close}>
                                 Close
                             </Button>
                         </Modal.Footer>
@@ -214,26 +200,6 @@ class App extends Component {
         return listItem
     }
 
-    ListAlbumsByUserComponent () {
-        let listItem = this.state.albumByUser.map( (item) => {
-            return (
-                <ListGroup.Item key={item.id}>
-                    <Row>
-                        <Col md={11}>
-                            <h5>Title:</h5>
-                            <p>{item.title}</p>
-                        </Col>
-                        <Col md={1} className="text-right">
-                            <Button variant="info" size="sm">see photos</Button>
-                        </Col>
-                    </Row>
-                </ListGroup.Item>
-            )
-        })
-
-        return listItem
-    }
-
     ListMyPostComponent () {
         let listItem = this.state.myPosts.map( (item) => {
             return (
@@ -279,9 +245,6 @@ class App extends Component {
                                     <Nav.Item>
                                         <Nav.Link eventKey="users">Users</Nav.Link>
                                     </Nav.Item>
-                                    <Nav.Item>
-                                        <Nav.Link eventKey="myalbum">My Album</Nav.Link>
-                                    </Nav.Item>
                                 </Nav>
                             </Col>
                         </Row>
@@ -298,12 +261,14 @@ class App extends Component {
                                             <Col md={12}>
                                                 <Row>
                                                     {this.UsersListComponent()}
+                                                    <ModalAlbum
+                                                        showModal={this.state.showModalAlbum}
+                                                        idUser={this.state.userId}
+                                                        parentAction={() => this.toggleModalAlbums()}>
+                                                    </ModalAlbum>
                                                 </Row>
                                             </Col>
                                         </Row>
-                                    </Tab.Pane>
-                                    <Tab.Pane eventKey="myalbum">
-                                        Second
                                     </Tab.Pane>
                                 </Tab.Content>
                             </Col>
