@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import {Button, Col, ListGroup, Modal, Row, Image} from 'react-bootstrap'
+import {Button, Col, ListGroup, Modal, Row, Image, Spinner} from 'react-bootstrap'
 import axios from 'axios'
 
 class ModalAlbum extends Component {
@@ -11,7 +11,8 @@ class ModalAlbum extends Component {
             photoByAlbum: [],
             dataPhoto: {},
             showPhoto: false,
-            showDetailPhoto: false
+            showDetailPhoto: false,
+            isLoading: false
         }
     }
 
@@ -56,10 +57,14 @@ class ModalAlbum extends Component {
     }
 
     getAlbumByUser (id) {
+        this.setState({
+            isLoading: true
+        })
         axios.get('https://jsonplaceholder.typicode.com/albums?userId=' + id)
             .then(res => {
                 this.setState({
-                    albumByUser: res.data
+                    albumByUser: res.data,
+                    isLoading: false
                 })
             })
             .catch(function (error) {
@@ -68,10 +73,14 @@ class ModalAlbum extends Component {
     }
 
     getPhotoByAlbum (id) {
+        this.setState({
+            isLoading: true
+        })
         axios.get('https://jsonplaceholder.typicode.com/photos?albumId=' + id)
             .then(res => {
                 this.setState({
-                    photoByAlbum: res.data
+                    photoByAlbum: res.data,
+                    isLoading: false
                 })
             })
             .catch(function (error) {
@@ -84,7 +93,15 @@ class ModalAlbum extends Component {
         if (this.state.showPhoto) {
             content = <Row>
                 {
-                    this.state.photoByAlbum.map((item) => {
+                    this.state.isLoading ? <Spinner
+                            as="span"
+                            animation="border"
+                            role="status"
+                            variant="secondary"
+                            aria-hidden="true"
+                            className="mx-auto"
+                        />
+                        : this.state.photoByAlbum.map((item) => {
                         return (
                             <Col md={2} className="mb-5" key={item.id}>
                                 <a href={'/'} onClick={(e) => { e.preventDefault(); this.toggleDetailPhoto(item)}}>
@@ -106,7 +123,15 @@ class ModalAlbum extends Component {
         } else {
             content = <ListGroup>
                 {
-                    this.state.albumByUser.map((item) => {
+                    this.state.isLoading ? <Spinner
+                        as="span"
+                        animation="border"
+                        role="status"
+                        variant="secondary"
+                        aria-hidden="true"
+                        className="mx-auto"
+                    />
+                    : this.state.albumByUser.map((item) => {
                         return (
                             <ListGroup.Item key={item.id}>
                                 <Row>

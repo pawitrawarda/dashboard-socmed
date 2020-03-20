@@ -1,7 +1,8 @@
 import React, { Component } from 'react'
 import axios from 'axios'
-import { Container, Row, Col, Tab, Nav, Button, Card, Modal, ListGroup } from 'react-bootstrap'
+import { Container, Row, Col, Tab, Nav, Button, Card, Modal, ListGroup, Form, Spinner } from 'react-bootstrap'
 import ModalAlbum from './components/ModalAlbum'
+import ModalComments from './components/ModalComments'
 import './App.css'
 
 class App extends Component {
@@ -11,31 +12,30 @@ class App extends Component {
         this.close = this.close.bind(this)
         this.closeModalDetailPost = this.closeModalDetailPost.bind(this)
         this.toggleModalAlbums = this.toggleModalAlbums.bind(this)
+        this.toggleModalComments= this.toggleModalComments.bind(this)
+        this.addMyPost = this.addMyPost.bind(this)
+        this.onChangeTitle = this.onChangeTitle.bind(this)
+        this.onChangeText = this.onChangeText.bind(this)
         this.state = {
             users: [],
             postsByUser: [],
-            myPosts: [
-                {
-                    id: '1',
-                    title: 'Lorem',
-                    body: 'ipsum dolor'
-                },
-                {
-                    id: '2',
-                    title: 'Ipsum',
-                    body: 'ipsum dolor sir amet'
-                }
-            ],
+            myPosts: [],
             listCommentByPost: [],
             userId: '',
             showModal: 0,
             showModalDetailPost: 0,
-            showModalAlbum: false
+            showModalAlbum: false,
+            showModalComments: false,
+            isLoading: false,
+            dataPost: null,
+            title: '',
+            text:''
         };
     }
 
     componentDidMount() {
         this.getListUsers()
+        this.getMyPost()
     }
 
     toggleModalAlbums (id) {
@@ -45,6 +45,16 @@ class App extends Component {
 
         this.setState({
             userId: id
+        })
+    }
+
+    toggleModalComments (data) {
+        this.setState({
+            showModalComments: !this.state.showModalComments
+        })
+
+        this.setState({
+            dataPost: data
         })
     }
 
@@ -96,6 +106,18 @@ class App extends Component {
             })
     }
 
+    getMyPost () {
+        axios.get('https://jsonplaceholder.typicode.com/posts?userId=1')
+            .then(res => {
+                this.setState({
+                    myPosts: res.data
+                })
+            })
+            .catch(function (error) {
+                console.log(error)
+            })
+    }
+
     getDetailPost (id) {
         axios.get('https://jsonplaceholder.typicode.com/posts/' + id + '/comments')
             .then(res => {
@@ -107,6 +129,44 @@ class App extends Component {
             .catch(function (error) {
                 console.log(error)
             })
+    }
+
+    addMyPost (e) {
+        e.preventDefault()
+        const dataSubmit = {
+            title: this.state.title,
+            body: this.state.text,
+            userId: 1
+        }
+        this.setState({
+            isLoading: true
+        })
+        axios.post('https://jsonplaceholder.typicode.com/posts', dataSubmit)
+            .then(res => {
+                let tempArray = this.state.myPosts
+                tempArray.unshift(res.data)
+                this.setState({
+                    isLoading: false,
+                    myPosts: tempArray,
+                    title: '',
+                    body: ''
+                })
+            })
+            .catch(function (error) {
+                alert(error)
+            })
+    }
+
+    onChangeTitle (e) {
+        this.setState({
+            title: e.target.value
+        })
+    }
+
+    onChangeText (e) {
+        this.setState({
+            text: e.target.value
+        })
     }
 
     UsersListComponent () {
@@ -205,9 +265,12 @@ class App extends Component {
             return (
                 <ListGroup.Item key={item.id}>
                     <Row>
-                        <Col md={11}>
+                        <Col md={10}>
                             <p>{item.title}</p>
                             <p>{item.body}</p>
+                        </Col>
+                        <Col md={2} className="text-right">
+                            <Button variant="info" size="sm" onClick={() => this.toggleModalComments(item)}>detail</Button>
                         </Col>
                     </Row>
                 </ListGroup.Item>
@@ -221,20 +284,49 @@ class App extends Component {
         return (
             <Container>
                 <section className="posts-box">
-                    <Row>
-                        <Col md={8} className="mx-auto">
-                            <Row>
-                                <Col md={12}>
-                                    <textarea className="col-12" placeholder="type your post.."></textarea>
-                                </Col>
-                                <Col md={12} className="text-right">
-                                    <Button variant="success">Post</Button>
-                                </Col>
-                            </Row>
-                        </Col>
-                    </Row>
+                    <form onSubmit={this.addMyPost}>
+                        <Row>
+                            <Col md={8} className="mx-auto">
+                                <Row>
+                                    <Col md={12}>
+                                        <Form.Group as={Row} controlId="formPlaintextPassword">
+                                            <Form.Label column sm="1">
+                                                Title
+                                            </Form.Label>
+                                            <Col sm="11">
+                                                <Form.Control type="text" placeholder="title.." value={this.state.title} onChange={this.onChangeTitle}/>
+                                            </Col>
+                                        </Form.Group>
+                                        <Form.Group as={Row} controlId="formPlaintextPassword">
+                                            <Form.Label column sm="1">
+                                                Text
+                                            </Form.Label>
+                                            <Col sm="11">
+                                                <Form.Control as="textarea" placeholder="text.." value={this.state.text} onChange={this.onChangeText}/>
+                                            </Col>
+                                        </Form.Group>
+                                    </Col>
+                                    <Col md={12} className="text-right">
+                                        <Button variant="success" type="submit" disabled={this.state.isLoading}>
+                                            {
+                                                this.state.isLoading ? <Spinner
+                                                    as="span"
+                                                    animation="border"
+                                                    size="sm"
+                                                    role="status"
+                                                    aria-hidden="true"
+                                                    className="mr-2"
+                                                /> : ''
+                                            }
+                                            Post
+                                        </Button>
+                                    </Col>
+                                </Row>
+                            </Col>
+                        </Row>
+                    </form>
                 </section>
-                <section className="contents" className="mx-auto">
+                <section className="contents mx-auto">
                     <Tab.Container defaultActiveKey="mypost">
                         <Row className="tab-navigation">
                             <Col md={12}>
@@ -252,8 +344,13 @@ class App extends Component {
                             <Col md={12}>
                                 <Tab.Content>
                                     <Tab.Pane eventKey="mypost">
-                                        <ListGroup>
+                                        <ListGroup className="mt-2">
                                             {this.ListMyPostComponent()}
+                                            <ModalComments
+                                                showModal={this.state.showModalComments}
+                                                dataPost={this.state.dataPost}
+                                                parentAction={() => this.toggleModalComments()}>
+                                            </ModalComments>
                                         </ListGroup>
                                     </Tab.Pane>
                                     <Tab.Pane eventKey="users">
