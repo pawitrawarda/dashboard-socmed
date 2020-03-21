@@ -16,6 +16,7 @@ class App extends Component {
         this.addMyPost = this.addMyPost.bind(this)
         this.onChangeTitle = this.onChangeTitle.bind(this)
         this.onChangeText = this.onChangeText.bind(this)
+
         this.state = {
             users: [],
             postsByUser: [],
@@ -29,8 +30,15 @@ class App extends Component {
             isLoading: false,
             dataPost: null,
             title: '',
-            text:''
+            text:'',
+            validated: false
         };
+    }
+
+    setValidated (param) {
+        this.setState({
+            validated: !param
+        })
     }
 
     componentDidMount() {
@@ -133,6 +141,15 @@ class App extends Component {
 
     addMyPost (e) {
         e.preventDefault()
+        const form = e.currentTarget
+        if (form.checkValidity() === false) {
+            e.stopPropagation()
+            this.setValidated(false)
+            return
+        }
+
+        this.setValidated(true)
+
         const dataSubmit = {
             title: this.state.title,
             body: this.state.text,
@@ -149,7 +166,7 @@ class App extends Component {
                     isLoading: false,
                     myPosts: tempArray,
                     title: '',
-                    body: ''
+                    text: ''
                 })
             })
             .catch(function (error) {
@@ -284,7 +301,7 @@ class App extends Component {
         return (
             <Container>
                 <section className="posts-box">
-                    <form onSubmit={this.addMyPost}>
+                    <Form onSubmit={this.addMyPost} noValidate validated={this.state.validated}>
                         <Row>
                             <Col md={8} className="mx-auto">
                                 <Row>
@@ -294,7 +311,7 @@ class App extends Component {
                                                 Title
                                             </Form.Label>
                                             <Col sm="11">
-                                                <Form.Control type="text" placeholder="title.." value={this.state.title} onChange={this.onChangeTitle}/>
+                                                <Form.Control required type="text" placeholder="title.." value={this.state.title} onChange={this.onChangeTitle}/>
                                             </Col>
                                         </Form.Group>
                                         <Form.Group as={Row} controlId="formPlaintextPassword">
@@ -302,7 +319,7 @@ class App extends Component {
                                                 Text
                                             </Form.Label>
                                             <Col sm="11">
-                                                <Form.Control as="textarea" placeholder="text.." value={this.state.text} onChange={this.onChangeText}/>
+                                                <Form.Control required as="textarea" placeholder="text.." value={this.state.text} onChange={this.onChangeText}/>
                                             </Col>
                                         </Form.Group>
                                     </Col>
@@ -324,7 +341,7 @@ class App extends Component {
                                 </Row>
                             </Col>
                         </Row>
-                    </form>
+                    </Form>
                 </section>
                 <section className="contents mx-auto">
                     <Tab.Container defaultActiveKey="mypost">
